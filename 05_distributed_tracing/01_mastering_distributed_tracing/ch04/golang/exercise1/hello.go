@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strings"
@@ -12,15 +13,16 @@ import (
 )
 
 var repo *people.Repository
-var tracer opentracing.Tracer
+
+// var tracer opentracing.Tracer
 
 func main() {
 	repo = people.NewRepository()
 	defer repo.Close()
 
-	tr, closer := tracing.Init("go-2-hello")
+	tracer, closer := tracing.Init("go-2-hello")
 	defer closer.Close()
-	tracer = tr
+	opentracing.SetGlobalTracer(tracer)
 
 	http.HandleFunc("/sayHello/", handleSayHello)
 	log.Println("Listen on http://localhost:8080/")
@@ -28,11 +30,12 @@ func main() {
 }
 
 func handleSayHello(w http.ResponseWriter, r *http.Request) {
-	span := tracer.StartSpan("say-hello")
+	span := opentracing.GlobalTracer().StartSpan("say-hello")
 	defer span.Finish()
 
+	ctx := opentracing.ContextWithSpan(r.Context(), span)
 	name := strings.TrimPrefix(r.URL.Path, "/sayHello/")
-	greeting, err := SayHello(name, span)
+	greeting, err := SayHello(ctx, name)
 
 	if err != nil {
 		span.SetTag("error", true)
@@ -45,27 +48,36 @@ func handleSayHello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(greeting))
 }
 
-func SayHello(name string, span opentracing.Span) (string, error) {
-	person, err := repo.GetPerson(name)
+func SayHello(ctx context.Context, name string) (string, error) {
+	person, err := repo.GetPerson(ctx, name)
 
 	if err != nil {
 		return "", err
 	}
 
-	span.LogKV(
+	opentracing.SpanFromContext(ctx).LogKV(
 		"name", person.Name,
 		"title", person.Title,
 		"description", person.Description,
 	)
 
 	return FormatGreeting(
+		ctx,
 		person.Name,
 		person.Title,
 		person.Description,
 	), nil
 }
 
-func FormatGreeting(name, title, description string) string {
+func FormatGreeting(
+	ctx context.Context,
+	name, title, description string,
+) string {
+	span, ctx := opentracing.StartSpanFromContext(
+		ctx,
+		"format-greeting",
+	)
+	defer span.Finish()
 	response := "Hello, "
 
 	if title != "" {

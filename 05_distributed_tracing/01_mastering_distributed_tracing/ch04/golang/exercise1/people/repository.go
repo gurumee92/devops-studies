@@ -1,10 +1,12 @@
 package people
 
 import (
+	"context"
 	"database/sql"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/opentracing/opentracing-go"
 
 	"studydts/lib/model"
 )
@@ -36,9 +38,16 @@ func NewRepository() *Repository {
 }
 
 // GetPerson is
-func (r *Repository) GetPerson(name string) (model.Person, error) {
+func (r *Repository) GetPerson(ctx context.Context, name string) (model.Person, error) {
 	query := "select title, description from people where name = ?"
-	rows, err := r.db.Query(query, name)
+	span, ctx := opentracing.StartSpanFromContext(
+		ctx,
+		"get-person",
+		opentracing.Tag{Key: "db.statement", Value: query},
+	)
+	defer span.Finish()
+
+	rows, err := r.db.QueryContext(ctx, query, name)
 
 	if err != nil {
 		return model.Person{}, nil
