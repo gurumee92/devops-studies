@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"studydts/exercise1/people"
 	"studydts/lib/tracing"
+	"studydts/people"
 
 	"github.com/opentracing/opentracing-go"
 	otLog "github.com/opentracing/opentracing-go/log"
