@@ -7,6 +7,7 @@ import (
 	"studydts/lib/tracing"
 
 	"github.com/opentracing/opentracing-go"
+	otTag "github.com/opentracing/opentracing-go/ext"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func handleFormatGreeting(w http.ResponseWriter, r *http.Request) {
 	)
 	span := opentracing.GlobalTracer().StartSpan(
 		"/formatGreeting",
-		opentracing.ChildOf(spanCtx),
+		otTag.RPCServerOption(spanCtx),
 	)
 	defer span.Finish()
 	ctx := opentracing.ContextWithSpan(r.Context(), span)

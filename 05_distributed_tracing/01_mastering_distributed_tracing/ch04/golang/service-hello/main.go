@@ -12,6 +12,7 @@ import (
 	"studydts/lib/xhttp"
 
 	"github.com/opentracing/opentracing-go"
+	otTag "github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
 )
 
@@ -63,6 +64,9 @@ func get(ctx context.Context, operationName, url string) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
 	defer span.Finish()
 
+	otTag.SpanKindRPCClient.Set(span)
+	otTag.HTTPUrl.Set(span, url)
+	otTag.HTTPMethod.Set(span, "GET")
 	opentracing.GlobalTracer().Inject(
 		span.Context(),
 		opentracing.HTTPHeaders,
