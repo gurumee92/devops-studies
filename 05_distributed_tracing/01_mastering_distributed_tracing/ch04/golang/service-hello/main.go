@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"studydts/lib/model"
 	"studydts/lib/tracing"
+	"studydts/lib/xhttp"
 
 	"github.com/opentracing/opentracing-go"
 	otLog "github.com/opentracing/opentracing-go/log"
@@ -55,23 +54,33 @@ func SayHello(ctx context.Context, name string) (string, error) {
 	return formatGreeting(ctx, person)
 }
 
-func getPeron(ctx context.Context, name string) (*model.Person, error) {
-	res, err := http.Get("http://localhost:8081/getPerson/" + name)
+func get(ctx context.Context, operationName, url string) ([]byte, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println(err)
-
 		return nil, err
 	}
-	defer res.Body.Close()
 
-	bytes, err := ioutil.ReadAll(res.Body)
+	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
+	defer span.Finish()
+
+	opentracing.GlobalTracer().Inject(
+		span.Context(),
+		opentracing.HTTPHeaders,
+		opentracing.HTTPHeadersCarrier(req.Header),
+	)
+
+	return xhttp.Do(req)
+}
+
+func getPeron(ctx context.Context, name string) (*model.Person, error) {
+	url := "http://localhost:8081/getPerson/" + name
+	res, err := get(ctx, "getPerson", url)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
 	var person model.Person
-	if err := json.Unmarshal(bytes, &person); err != nil {
+	if err := json.Unmarshal(res, &person); err != nil {
 		return nil, err
 	}
 
@@ -84,13 +93,10 @@ func formatGreeting(ctx context.Context, person *model.Person) (string, error) {
 	v.Set("title", person.Title)
 	v.Set("description", person.Description)
 	url := "http://localhost:8082/formatGreeting?" + v.Encode()
-	res, err := http.Get(url)
-
+	res, err := get(ctx, "formatGreeting", url)
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
 
-	bytes, _ := ioutil.ReadAll(res.Body)
-	return string(bytes), nil
+	return string(res), nil
 }
