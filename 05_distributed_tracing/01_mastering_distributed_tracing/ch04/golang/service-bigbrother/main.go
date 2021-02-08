@@ -8,7 +8,7 @@ import (
 	"studydts/lib/tracing"
 	"studydts/people"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	otLog "github.com/opentracing/opentracing-go/log"
 )
 

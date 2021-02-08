@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"studydts/lib/tracing"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	otTag "github.com/opentracing/opentracing-go/ext"
 )
 
@@ -31,8 +31,8 @@ func handleFormatGreeting(w http.ResponseWriter, r *http.Request) {
 		otTag.RPCServerOption(spanCtx),
 	)
 	defer span.Finish()
-	ctx := opentracing.ContextWithSpan(r.Context(), span)
 
+	ctx := opentracing.ContextWithSpan(r.Context(), span)
 	name := r.FormValue("name")
 	title := r.FormValue("title")
 	description := r.FormValue("description")
@@ -52,7 +52,12 @@ func FormatGreeting(
 	)
 	defer span.Finish()
 
-	response := "Hello, "
+	greeting := span.BaggageItem("greeting")
+	if greeting == "" {
+		greeting = "Hello"
+	}
+
+	response := greeting + ", "
 	if title != "" {
 		response += title + " "
 	}

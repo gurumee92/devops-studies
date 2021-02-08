@@ -11,7 +11,7 @@ import (
 	"studydts/lib/tracing"
 	"studydts/lib/xhttp"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	otTag "github.com/opentracing/opentracing-go/ext"
 	otLog "github.com/opentracing/opentracing-go/log"
 )
@@ -27,13 +27,19 @@ func main() {
 }
 
 func handleSayHello(w http.ResponseWriter, r *http.Request) {
-	span := opentracing.GlobalTracer().StartSpan("say-hello")
+	spanCtx, _ := opentracing.GlobalTracer().Extract(
+		opentracing.HTTPHeaders,
+		opentracing.HTTPHeadersCarrier(r.Header),
+	)
+	span := opentracing.GlobalTracer().StartSpan(
+		"say-hello",
+		otTag.RPCServerOption(spanCtx),
+	)
 	defer span.Finish()
-	ctx := opentracing.ContextWithSpan(r.Context(), span)
 
+	ctx := opentracing.ContextWithSpan(r.Context(), span)
 	name := strings.TrimPrefix(r.URL.Path, "/sayHello/")
 	greeting, err := SayHello(ctx, name)
-
 	if err != nil {
 		span.SetTag("error", true)
 		span.LogFields(otLog.Error(err))
