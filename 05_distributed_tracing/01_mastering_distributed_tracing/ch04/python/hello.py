@@ -1,19 +1,21 @@
 from flask import Flask
 from database import Person
 from lib.tracing import init_tracer
+import opentracing
 
 app = Flask("service-hello")
 init_tracer("service-hello")
 
 @app.route("/sayHello/<name>")
 def say_hello(name):
-    person = get_person(name)
-    resp = format_greeting(
-        name=person.name,
-        title=person.title,
-        description=person.description,        
-    )
-    return resp
+    with opentracing.tracer.start_span("say-hello"):    
+        person = get_person(name)
+        resp = format_greeting(
+            name=person.name,
+            title=person.title,
+            description=person.description,        
+        )
+        return resp
 
 
 def get_person(name):
