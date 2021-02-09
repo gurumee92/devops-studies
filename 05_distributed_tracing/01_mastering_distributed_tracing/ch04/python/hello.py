@@ -20,32 +20,34 @@ def say_hello(name):
 
 
 def get_person(name, span):
-    person = Person.get(name)
+    with opentracing.tracer.start_span("get-person") as span:   
+        person = Person.get(name)
 
-    if person is None:
-        person = Person()
-        person.name = name
-        
-    span.log_kv({
-        "name": person.name,
-        "title": person.title,
-        "description": person.description, 
-    })
-    return person
+        if person is None:
+            person = Person()
+            person.name = name
+
+        span.log_kv({
+            "name": person.name,
+            "title": person.title,
+            "description": person.description, 
+        })
+        return person
 
 
 def format_greeting(name, title, description):
-    greeting  = "Hello, "
+    with opentracing.tracer.start_span("foramt-greeting") as span:   
+        greeting  = "Hello, "
 
-    if title:
-        greeting += title + " "
-    
-    greeting += name + "!"
+        if title:
+            greeting += title + " "
+        
+        greeting += name + "!"
 
-    if description:
-        greeting += " " + description
-    
-    return greeting + "\n"
+        if description:
+            greeting += " " + description
+        
+        return greeting + "\n"
 
 
 if __name__ == "__main__":
