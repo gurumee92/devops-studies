@@ -8,29 +8,26 @@ init_tracer("service-hello")
 
 @app.route("/sayHello/<name>")
 def say_hello(name):
-    with opentracing.tracer.start_span("say-hello") as span:    
-        person = get_person(name, span)
+    with opentracing.tracer.start_active_span("say-hello") as scope:    
+        person = get_person(name)
         resp = format_greeting(
             name=person.name,
             title=person.title,
             description=person.description,
-            span=span,        
         )
-        span.set_tag('response', resp)
+        scope.span.set_tag('response', resp)
         return resp
 
 
-def get_person(name, span):
-    with opentracing.tracer.start_span(
-        "get-person",child_of=span,
-    ) as span:   
+def get_person(name):
+    with opentracing.tracer.start_active_span("get-person") as scope:   
         person = Person.get(name)
 
         if person is None:
             person = Person()
             person.name = name
 
-        span.log_kv({
+        scope.span.log_kv({
             "name": person.name,
             "title": person.title,
             "description": person.description, 
@@ -38,10 +35,8 @@ def get_person(name, span):
         return person
 
 
-def format_greeting(name, title, description, span):
-    with opentracing.tracer.start_span(
-        "foramt-greeting", child_of=span,
-    ) as span:   
+def format_greeting(name, title, description):
+    with opentracing.tracer.start_active_span("foramt-greeting"):   
         greeting  = "Hello, "
 
         if title:
