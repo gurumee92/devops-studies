@@ -10,7 +10,14 @@ init_tracer("service-formatter")
 
 @app.route("/formatGreeting")
 def handle_format_greeting():
-    with opentracing.tracer.start_active_span("/formatGreeting") as scope:    
+    span_ctx = opentracing.tracer.extract(
+        opentracing.Format.HTTP_HEADERS,
+        request.headers,
+    )
+    with opentracing.tracer.start_active_span(
+        "/formatGreeting",
+        child_of=span_ctx,
+    ) as scope:    
         name = request.args.get('name')
         title = request.args.get('title')
         description = request.args.get('description')
@@ -20,7 +27,6 @@ def handle_format_greeting():
             title=title,
             description=description,
         )
-
 
 def format_greeting(name, title, description):
     with opentracing.tracer.start_active_span("foramt-greeting"):   

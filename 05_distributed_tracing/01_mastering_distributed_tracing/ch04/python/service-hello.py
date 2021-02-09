@@ -20,14 +20,24 @@ def say_hello(name):
         return resp
 
 
+def _get(url, params=None):
+    span = opentracing.tracer.active_span
+    headers = {}
+    opentracing.tracer.inject(
+        span.context,
+        opentracing.Format.HTTP_HEADERS,
+        headers
+    )
+    resp = requests.get(url, params=params, headers=headers)
+    assert resp.status_code == 200
+    return resp.text
+
+
 def get_person(name):
     with opentracing.tracer.start_active_span("get-person") as scope:   
         url = 'http://localhost:8081/getPerson/%s' % name
-        resp = requests.get(url)
-        
-        assert resp.status_code == 200
-        
-        person = json.loads(resp.text)
+        res = _get(url)
+        person = json.loads(res)
         scope.span.log_kv({
             'name': person['name'],
             'title': person['title'],
@@ -39,9 +49,7 @@ def get_person(name):
 def format_greeting(person):
     with opentracing.tracer.start_active_span("foramt-greeting"):   
         url = 'http://localhost:8082/formatGreeting'
-        resp = requests.get(url, params=person)
-        assert resp.status_code == 200
-        return resp.text
+        return _get(url, params=person)
 
 
 if __name__ == "__main__":

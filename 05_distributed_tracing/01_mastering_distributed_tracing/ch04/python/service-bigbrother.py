@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import request
 import opentracing
 
 from database import Person
@@ -10,7 +11,14 @@ init_tracer("service-bigbrother")
 
 @app.route("/getPerson/<name>")
 def get_person(name):
-    with opentracing.tracer.start_active_span("/getPerson") as scope:    
+    span_ctx = opentracing.tracer.extract(
+        opentracing.Format.HTTP_HEADERS,
+        request.headers,
+    )
+    with opentracing.tracer.start_active_span(
+        "/getPerson",
+        child_of=span_ctx
+    ) as scope:    
         person = Person.get(name)
 
         if person is None:
