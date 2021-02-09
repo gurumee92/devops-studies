@@ -13,14 +13,17 @@ def say_hello(name):
         resp = format_greeting(
             name=person.name,
             title=person.title,
-            description=person.description,        
+            description=person.description,
+            span=span,        
         )
         span.set_tag('response', resp)
         return resp
 
 
 def get_person(name, span):
-    with opentracing.tracer.start_span("get-person") as span:   
+    with opentracing.tracer.start_span(
+        "get-person",child_of=span,
+    ) as span:   
         person = Person.get(name)
 
         if person is None:
@@ -35,8 +38,10 @@ def get_person(name, span):
         return person
 
 
-def format_greeting(name, title, description):
-    with opentracing.tracer.start_span("foramt-greeting") as span:   
+def format_greeting(name, title, description, span):
+    with opentracing.tracer.start_span(
+        "foramt-greeting", child_of=span,
+    ) as span:   
         greeting  = "Hello, "
 
         if title:
