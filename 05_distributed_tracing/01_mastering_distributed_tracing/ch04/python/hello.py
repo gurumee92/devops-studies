@@ -1,7 +1,9 @@
 from flask import Flask
 from database import Person
+from lib.tracing import init_tracer
 
 app = Flask("service-hello")
+init_tracer("service-hello")
 
 @app.route("/sayHello/<name>")
 def say_hello(name):
