@@ -11,6 +11,7 @@ sqlalchemy = "*"
 pymysql = "*"
 jaeger-client = "*"
 opentracing-instrumentation = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
