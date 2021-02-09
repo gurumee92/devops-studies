@@ -1,9 +1,10 @@
 from flask import Flask
 from flask import request
+import opentracing
+from opentracing.ext import tags
 
 from database import Person
 from lib.tracing import init_tracer
-import opentracing
 
 app = Flask("service-formatter")
 init_tracer("service-formatter")
@@ -17,6 +18,7 @@ def handle_format_greeting():
     with opentracing.tracer.start_active_span(
         "/formatGreeting",
         child_of=span_ctx,
+        tags={tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER},
     ) as scope:    
         name = request.args.get('name')
         title = request.args.get('title')

@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, request
 import opentracing
+from opentracing.ext import tags
 
 import requests
 import json
@@ -13,7 +14,15 @@ init_tracer("service-hello")
 
 @app.route("/sayHello/<name>")
 def say_hello(name):
-    with opentracing.tracer.start_active_span("say-hello") as scope:    
+    span_ctx = opentracing.tracer.extract(
+        opentracing.Format.HTTP_HEADERS,
+        request.headers,
+    )
+    with opentracing.tracer.start_active_span(
+        "say-hello",
+        child_of=span_ctx,
+        tags={tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER},
+    ) as scope:    
         person = get_person(name)
         resp = format_greeting(person)
         scope.span.set_tag('response', resp)
@@ -22,6 +31,9 @@ def say_hello(name):
 
 def _get(url, params=None):
     span = opentracing.tracer.active_span
+    span.set_tag(tags.HTTP_URL, url)
+    span.set_tag(tags.HTTP_METHOD, "GET")
+    span.set_tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
     headers = {}
     opentracing.tracer.inject(
         span.context,

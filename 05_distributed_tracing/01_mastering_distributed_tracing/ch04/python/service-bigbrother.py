@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 import opentracing
+from opentracing.ext import tags
 
 from database import Person
 from lib.tracing import init_tracer
@@ -17,7 +18,8 @@ def get_person(name):
     )
     with opentracing.tracer.start_active_span(
         "/getPerson",
-        child_of=span_ctx
+        child_of=span_ctx,
+        tags={tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER},
     ) as scope:    
         person = Person.get(name)
 
