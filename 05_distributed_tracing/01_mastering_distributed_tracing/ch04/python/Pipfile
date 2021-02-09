@@ -9,6 +9,8 @@ verify_ssl = true
 flask = "*"
 sqlalchemy = "*"
 pymysql = "*"
+jaeger-client = "*"
+opentracing-instrumentation = "*"
 
 [requires]
 python_version = "3.8"
