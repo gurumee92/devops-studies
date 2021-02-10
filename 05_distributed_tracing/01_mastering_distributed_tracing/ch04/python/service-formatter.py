@@ -1,25 +1,20 @@
 from flask import Flask
 from flask import request
+from flask_opentracing import FlaskTracer
 import opentracing
 from opentracing.ext import tags
 
 from database import Person
-from lib.tracing import init_tracer
+from lib.tracing import init_tracer, flask_to_scope
 
 app = Flask("service-formatter")
 init_tracer("service-formatter")
+flask_tracer = FlaskTracer(opentracing.tracer, True, app)
+
 
 @app.route("/formatGreeting")
 def handle_format_greeting():
-    span_ctx = opentracing.tracer.extract(
-        opentracing.Format.HTTP_HEADERS,
-        request.headers,
-    )
-    with opentracing.tracer.start_active_span(
-        "/formatGreeting",
-        child_of=span_ctx,
-        tags={tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER},
-    ) as scope:    
+    with flask_to_scope(flask_tracer, request) as scope: 
         name = request.args.get('name')
         title = request.args.get('title')
         description = request.args.get('description')

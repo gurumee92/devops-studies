@@ -1,3 +1,4 @@
+import opentracing
 import logging
 from jaeger_client import Config
 
@@ -18,3 +19,7 @@ def init_tracer(service):
     )
 
     config.initialize_tracer()
+
+
+def flask_to_scope(flask_tracer, request):
+    return opentracing.tracer.scope_manager.activate(flask_tracer.get_span(request), False)

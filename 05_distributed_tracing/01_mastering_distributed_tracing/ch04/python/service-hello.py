@@ -1,28 +1,24 @@
 from flask import Flask, request
+from flask_opentracing import FlaskTracer
 import opentracing
 from opentracing.ext import tags
+from opentracing_instrumentation.client_hooks import install_all_patches
 
 import requests
 import json
 
 from database import Person
-from lib.tracing import init_tracer
+from lib.tracing import init_tracer, flask_to_scope
 
 
 app = Flask("service-hello")
 init_tracer("service-hello")
+install_all_patches()
+flask_tracer = FlaskTracer(opentracing.tracer, True, app)
 
 @app.route("/sayHello/<name>")
 def say_hello(name):
-    span_ctx = opentracing.tracer.extract(
-        opentracing.Format.HTTP_HEADERS,
-        request.headers,
-    )
-    with opentracing.tracer.start_active_span(
-        "say-hello",
-        child_of=span_ctx,
-        tags={tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER},
-    ) as scope:    
+     with flask_to_scope(flask_tracer, request) as scope:  
         person = get_person(name)
         resp = format_greeting(person)
         scope.span.set_tag('response', resp)
@@ -30,19 +26,9 @@ def say_hello(name):
 
 
 def _get(url, params=None):
-    span = opentracing.tracer.active_span
-    span.set_tag(tags.HTTP_URL, url)
-    span.set_tag(tags.HTTP_METHOD, "GET")
-    span.set_tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
-    headers = {}
-    opentracing.tracer.inject(
-        span.context,
-        opentracing.Format.HTTP_HEADERS,
-        headers
-    )
-    resp = requests.get(url, params=params, headers=headers)
-    assert resp.status_code == 200
-    return resp.text
+    r = requests.get(url, params=params)
+    assert r.status_code == 200
+    return r.text
 
 
 def get_person(name):
