@@ -31,8 +31,8 @@ def handle_format_greeting():
         )
 
 def format_greeting(name, title, description):
-    with opentracing.tracer.start_active_span("foramt-greeting"):   
-        greeting  = "Hello, "
+    with opentracing.tracer.start_active_span("foramt-greeting") as scope:
+        greeting  = (scope.span.get_baggage_item("greeting") or "Hello") + " "
 
         if title:
             greeting += title + " "
