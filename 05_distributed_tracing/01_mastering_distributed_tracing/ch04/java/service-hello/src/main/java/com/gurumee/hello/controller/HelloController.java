@@ -2,6 +2,7 @@ package com.gurumee.hello.controller;
 
 import com.gurumee.hello.lib.model.Person;
 import com.gurumee.hello.lib.model.PersonRepository;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +23,15 @@ public class HelloController {
     @GetMapping("/sayHello/{name}")
     public String sayHello(@PathVariable String name) {
         Span span = tracer.buildSpan("say-hello").start();
-        try {
-            Person person = getPerson(name, span);
+        try (Scope s = tracer.scopeManager().activate(span, false)){
+            Person person = getPerson(name);
             Map<String, String> fields = new LinkedHashMap<>();
             fields.put("name", person.getName());
             fields.put("title", person.getTitle());
             fields.put("description", person.getDescription());
             span.log(fields);
 
-            String response = formatGreeting(person, span);
+            String response = formatGreeting(person);
             span.setTag("response", response);
 
             return response;
@@ -39,11 +40,9 @@ public class HelloController {
         }
     }
 
-    private String formatGreeting(Person person, Span parent) {
-        Span span = tracer.buildSpan("format-greeting")
-                .asChildOf(parent)
-                .start();
-        try {
+    private String formatGreeting(Person person) {
+        Span span = tracer.buildSpan("format-greeting").start();
+        try (Scope s = tracer.scopeManager().activate(span, false)){
             String response = "Hello, ";
             if (person.getTitle() != null && !person.getTitle().isBlank()) {
                 response += person.getTitle() + " ";
@@ -61,11 +60,9 @@ public class HelloController {
         }
     }
 
-    private Person getPerson(String name, Span parent) {
-        Span span = tracer.buildSpan("get-person")
-                .asChildOf(parent)
-                .start();
-        try {
+    private Person getPerson(String name) {
+        Span span = tracer.buildSpan("get-person").start();
+        try (Scope s = tracer.scopeManager().activate(span, false)){
             Optional<Person> personOptional = personRepository.findById(name);
             return personOptional.orElseGet(() -> new Person(name));
         } finally {
