@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -22,7 +24,15 @@ public class HelloController {
         Span span = tracer.buildSpan("say-hello").start();
         try {
             Person person = getPerson(name);
+            Map<String, String> fields = new LinkedHashMap<>();
+            fields.put("name", person.getName());
+            fields.put("title", person.getTitle());
+            fields.put("description", person.getDescription());
+            span.log(fields);
+
             String response = formatGreeting(person);
+            span.setTag("response", response);
+
             return response;
         } finally {
             span.finish();
