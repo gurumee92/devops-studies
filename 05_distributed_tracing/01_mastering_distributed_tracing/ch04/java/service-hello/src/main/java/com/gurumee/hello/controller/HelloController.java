@@ -40,23 +40,33 @@ public class HelloController {
     }
 
     private String formatGreeting(Person person) {
-        String response = "Hello, ";
-        if (person.getTitle() != null && !person.getTitle().isBlank()) {
-            response += person.getTitle() + " ";
+        Span span = tracer.buildSpan("format-greeting").start();
+        try {
+            String response = "Hello, ";
+            if (person.getTitle() != null && !person.getTitle().isBlank()) {
+                response += person.getTitle() + " ";
+            }
+
+            response += person.getName() + "!";
+
+            if (person.getTitle() != null && !person.getDescription().isBlank()) {
+                response += " " + person.getDescription();
+            }
+
+            return response + "\n";
+        } finally {
+            span.finish();
         }
-
-        response += person.getName() + "!";
-
-        if (person.getTitle() != null && !person.getDescription().isBlank()) {
-            response += " " + person.getDescription();
-        }
-
-        return response + "\n";
     }
 
     private Person getPerson(String name) {
-        Optional<Person> personOptional = personRepository.findById(name);
-        return personOptional.orElseGet(() -> new Person(name));
+        Span span = tracer.buildSpan("get-person").start();
+        try {
+            Optional<Person> personOptional = personRepository.findById(name);
+            return personOptional.orElseGet(() -> new Person(name));
+        } finally {
+            span.finish();
+        }
     }
 
 }
