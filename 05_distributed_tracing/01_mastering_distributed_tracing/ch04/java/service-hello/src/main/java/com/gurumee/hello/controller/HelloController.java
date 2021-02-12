@@ -23,14 +23,14 @@ public class HelloController {
     public String sayHello(@PathVariable String name) {
         Span span = tracer.buildSpan("say-hello").start();
         try {
-            Person person = getPerson(name);
+            Person person = getPerson(name, span);
             Map<String, String> fields = new LinkedHashMap<>();
             fields.put("name", person.getName());
             fields.put("title", person.getTitle());
             fields.put("description", person.getDescription());
             span.log(fields);
 
-            String response = formatGreeting(person);
+            String response = formatGreeting(person, span);
             span.setTag("response", response);
 
             return response;
@@ -39,8 +39,10 @@ public class HelloController {
         }
     }
 
-    private String formatGreeting(Person person) {
-        Span span = tracer.buildSpan("format-greeting").start();
+    private String formatGreeting(Person person, Span parent) {
+        Span span = tracer.buildSpan("format-greeting")
+                .asChildOf(parent)
+                .start();
         try {
             String response = "Hello, ";
             if (person.getTitle() != null && !person.getTitle().isBlank()) {
@@ -59,8 +61,10 @@ public class HelloController {
         }
     }
 
-    private Person getPerson(String name) {
-        Span span = tracer.buildSpan("get-person").start();
+    private Person getPerson(String name, Span parent) {
+        Span span = tracer.buildSpan("get-person")
+                .asChildOf(parent)
+                .start();
         try {
             Optional<Person> personOptional = personRepository.findById(name);
             return personOptional.orElseGet(() -> new Person(name));
