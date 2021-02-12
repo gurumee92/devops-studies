@@ -50,5 +50,8 @@ project(':common') {
 project(':service-hello') {
     dependencies {
 //        compile project(':common')
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'io.jaegertracing:jaeger-client:0.31.0'
+        runtimeOnly 'mysql:mysql-connector-java'
     }
 }
