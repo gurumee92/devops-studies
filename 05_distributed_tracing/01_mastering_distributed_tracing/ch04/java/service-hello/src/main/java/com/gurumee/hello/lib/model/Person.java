@@ -1,4 +1,4 @@
-package com.gurumee.hello.person;
+package com.gurumee.hello.lib.model;
 
 import lombok.*;
 

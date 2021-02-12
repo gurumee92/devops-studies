@@ -1,9 +1,8 @@
 package com.gurumee.hello.controller;
 
-import com.gurumee.hello.person.Person;
-import com.gurumee.hello.person.PersonRepository;
+import com.gurumee.hello.lib.model.Person;
+import com.gurumee.hello.lib.model.PersonRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
