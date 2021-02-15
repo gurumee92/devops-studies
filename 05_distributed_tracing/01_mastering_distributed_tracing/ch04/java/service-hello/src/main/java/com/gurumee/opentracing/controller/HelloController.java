@@ -1,7 +1,7 @@
-package com.gurumee.hello.controller;
+package com.gurumee.opentracing.controller;
 
-import com.gurumee.hello.lib.model.Person;
-import com.gurumee.hello.lib.model.PersonRepository;
+import com.gurumee.opentracing.model.Person;
+import com.gurumee.opentracing.model.PersonRepository;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;

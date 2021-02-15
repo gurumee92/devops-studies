@@ -1,4 +1,4 @@
-package com.gurumee.hello;
+package com.gurumee.opentracing;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

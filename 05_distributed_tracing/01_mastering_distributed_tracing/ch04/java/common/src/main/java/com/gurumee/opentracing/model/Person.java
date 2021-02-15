@@ -1,4 +1,4 @@
-package com.gurumee.hello.lib.model;
+package com.gurumee.opentracing.model;
 
 import lombok.*;
 
@@ -11,6 +11,7 @@ import javax.persistence.Table;
 @Table(name="people")
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter @ToString
+@Builder
 public class Person {
     @Id
     private String name;

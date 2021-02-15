@@ -1,4 +1,4 @@
-package com.gurumee.hello.lib.model;
+package com.gurumee.opentracing.model;
 
 import org.springframework.data.repository.CrudRepository;
 

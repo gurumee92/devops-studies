@@ -12,7 +12,7 @@ buildscript {
     }
 }
 
-subprojects {
+allprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
@@ -31,8 +31,8 @@ subprojects {
 
     // 모든 모듈에서 사용하는 라이브러리
     dependencies {
-
         implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -41,17 +41,14 @@ subprojects {
 
 project(':common') {
     dependencies {
-//        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-//        testRuntimeOnly 'com.h2database:h2'
-//        runtimeOnly 'mysql:mysql-connector-java'
+        compile 'io.jaegertracing:jaeger-client:0.31.0'
+        testRuntimeOnly 'com.h2database:h2'
     }
 }
 
 project(':service-hello') {
     dependencies {
-//        compile project(':common')
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-        implementation 'io.jaegertracing:jaeger-client:0.31.0'
         runtimeOnly 'mysql:mysql-connector-java'
+        compile project(':common')
     }
 }

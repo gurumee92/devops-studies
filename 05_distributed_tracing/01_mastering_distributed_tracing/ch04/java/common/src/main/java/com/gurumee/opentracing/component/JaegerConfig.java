@@ -1,10 +1,10 @@
-package com.gurumee.hello.lib.component;
+package com.gurumee.opentracing.component;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class AppConfig {
+public class JaegerConfig {
     @Bean io.opentracing.Tracer initTracer() {
         io.jaegertracing.Configuration.SamplerConfiguration samplerConfiguration = new io.jaegertracing.Configuration.SamplerConfiguration()
                 .withType("const").withParam(1)
