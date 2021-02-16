@@ -6,10 +6,15 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +22,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 public class HelloController {
-    private final PersonRepository personRepository;
+    private final RestTemplate restTemplate;
     private final Tracer tracer;
 
     @GetMapping("/sayHello/{name}")
@@ -43,18 +48,14 @@ public class HelloController {
     private String formatGreeting(Person person) {
         Span span = tracer.buildSpan("format-greeting").start();
         try (Scope s = tracer.scopeManager().activate(span, false)){
-            String response = "Hello, ";
-            if (person.getTitle() != null && !person.getTitle().isBlank()) {
-                response += person.getTitle() + " ";
-            }
-
-            response += person.getName() + "!";
-
-            if (person.getTitle() != null && !person.getDescription().isBlank()) {
-                response += " " + person.getDescription();
-            }
-
-            return response + "\n";
+            URI uri = UriComponentsBuilder //
+                    .fromHttpUrl("http://localhost:8082/formatGreeting") //
+                    .queryParam("name", person.getName()) //
+                    .queryParam("title", person.getTitle()) //
+                    .queryParam("description", person.getDescription()) //
+                    .build(Collections.emptyMap());
+            ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+            return response.getBody();
         } finally {
             span.finish();
         }
@@ -63,8 +64,9 @@ public class HelloController {
     private Person getPerson(String name) {
         Span span = tracer.buildSpan("get-person").start();
         try (Scope s = tracer.scopeManager().activate(span, false)){
-            Optional<Person> personOptional = personRepository.findById(name);
-            return personOptional.orElseGet(() -> new Person(name));
+            String url = "http://localhost:8081/getPerson/" + name;
+            ResponseEntity<Person> response = restTemplate.getForEntity(url, Person.class);
+            return response.getBody();
         } finally {
             span.finish();
         }

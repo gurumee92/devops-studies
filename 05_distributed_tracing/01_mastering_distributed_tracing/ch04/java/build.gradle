@@ -32,7 +32,7 @@ allprojects {
     // 모든 모듈에서 사용하는 라이브러리
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-web'
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        compile 'io.jaegertracing:jaeger-client:0.31.0'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -41,14 +41,26 @@ allprojects {
 
 project(':common') {
     dependencies {
-        compile 'io.jaegertracing:jaeger-client:0.31.0'
-        testRuntimeOnly 'com.h2database:h2'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+project(':service-bigbrother') {
+    dependencies {
+        compile project(':common')
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        runtimeOnly 'mysql:mysql-connector-java'
     }
 }
 
 project(':service-hello') {
     dependencies {
-        runtimeOnly 'mysql:mysql-connector-java'
+        compile project(':common')
+    }
+}
+
+project(':service-formatter') {
+    dependencies {
         compile project(':common')
     }
 }
