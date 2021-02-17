@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'opentracing'
+include 'common'
+include 'service-hello'
+include 'service-bigbrother'
+include 'service-formatter'
+
