@@ -1,2 +1,5 @@
 .vscode
 
+.terraform
+.terraform.lock.hcl
+*.tfstate
